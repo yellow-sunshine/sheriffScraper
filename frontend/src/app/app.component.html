@@ -17,15 +17,29 @@
                             <!-- th>plaintiff</th-->
                             <!-- th>defendant</th-->
                             <th>Property Address</th>
-                            <th>eventTypeId</th>
+                            <!--- th>eventTypeId</th --->
                             <th>Delayed</th>
                         </tr>
                     </thead>
                 </table>
         </div>
     </div>
-</div
->
+</div>
+
+
+<google-map height="400px"
+            width="750px"
+            [center]="center"
+            [zoom]="zoom">
+    <map-marker #marker="mapMarker"
+                *ngFor="let markerPosition of markerPositions"
+                [position]="markerPosition"
+                (mapClick)="openInfoWindow(marker)"></map-marker>
+    <map-info-window>Info Window content</map-info-window>
+</google-map>
+
+<div>Latitude: {{display?.lat}}</div>
+<div>Longitude: {{display?.lng}}</div>
 <!-- 
 <td><a href='https://sheriffsaleviewer.polkcountyiowa.gov/Home/Detail/{{ listing.propertyId }}'>{{ listing.propertyId }}</a></td>  
 "propertyId":97208,
@@ -36,4 +50,7 @@
 "propertyAddress":"4209 65th Street APT 3, Urbandale, IA, USA",
 "eventTypeId":1,
 "isDelayed":false 
+
+gmaps key
+AIzaSyBR4TRTbx8QkXovb4d-SjbF-MqNxO7z5Js
 -->

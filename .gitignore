@@ -13,12 +13,12 @@ yarn.lock
 !.yarn/cache
 #.pnp.*
 
+/frontend/.angular/
+/*/.angular/
 /*/node_modules
 /*/.env
 /*/coverage
 /*/coverage.json
-
 .editorconfig
 .vscode
-
 /*/dist/

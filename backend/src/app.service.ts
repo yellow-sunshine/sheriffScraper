@@ -20,7 +20,7 @@ export class AppService {
               "Referer": "https://sheriffsaleviewer.polkcountyiowa.gov/",
               "Referrer-Policy": "strict-origin-when-cross-origin"
           },
-          body: sherrifQuery,
+          body: sherrifQuery, 
       })
       const {data, errors} = await response.json()
       if (response.ok) {
