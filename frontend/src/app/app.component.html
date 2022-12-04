@@ -15,9 +15,15 @@
                                 *ngFor="let markerPosition of markerPositions"
                                 [position]="markerPosition"
                                 [options]="markerOptions"
-                                (mapClick)="openInfoWindow(marker)">
+                                (mapClick)="openInfoWindow(marker, markerPosition.lat)">
                     </map-marker>
-                    <map-info-window>Info Window content {{ markerPositions[0] }} {{ markerPositions[0] }}</map-info-window>
+                    <map-info-window>
+                            <a href='http://maps.google.com/maps?q=&layer=c&cbll={{ infoContentLat }},{{ infoContentLng }}' target='_blank'>
+                                <img src="https://maps.googleapis.com/maps/api/streetview?size=300x300&location={{ infoContentLat }},{{ infoContentLng }}&key=AIzaSyBR4TRTbx8QkXovb4d-SjbF-MqNxO7z5Js">
+                            </a>
+                            <br />
+                            <a href='{{ infoContentSheriffUrl }}' target='_blank'> {{ infoContentAddress }}</a>
+                    </map-info-window>
                 </google-map>
             </div>
         </div>

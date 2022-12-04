@@ -41,6 +41,7 @@ export class AppComponent implements OnInit, AfterViewInit{
     locationCoords?: google.maps.LatLng | null = null;
     static listingsData: string[] = [];
     loaded: number = 1;
+    static responseCopy: any;
 
     constructor(private http: HttpClient, private geocodingService: GeocodingService) {
 
@@ -86,16 +87,17 @@ export class AppComponent implements OnInit, AfterViewInit{
                 },
             drawCallback: function (responseData: any) { 
                 if(responseData.json){
+                    AppComponent.responseCopy=responseData.json
                     for (var key in responseData.json) {
-                        // const data = {
-                        //     "propertyId": responseData.json[key]['propertyId'],
-                        //     "referenceNumber": responseData.json[key]['referenceNumber'],
-                        //     "salesDate": responseData.json[key]['salesDate'],
-                        //     "propertyAddress": responseData.json[key]['propertyAddress'],
-                        //     "isDelayed": responseData.json[key]['isDelayed']   ,
-                        //     "lng": "",
-                        //     "lat": ""                   
-                        // }
+                        const data = {
+                            "propertyId": responseData.json[key]['propertyId'],
+                            "referenceNumber": responseData.json[key]['referenceNumber'],
+                            "salesDate": responseData.json[key]['salesDate'],
+                            "propertyAddress": responseData.json[key]['propertyAddress'],
+                            "isDelayed": responseData.json[key]['isDelayed']   ,
+                            "lng": "",
+                            "lat": ""                   
+                        }
                         AppComponent.listingsData.push(
                             responseData.json[key]['propertyAddress']
                         );
@@ -144,39 +146,66 @@ export class AppComponent implements OnInit, AfterViewInit{
 
     addMarker(lat:number, lon:number) {
         var myLatlng = new google.maps.LatLng(lat,lon).toJSON();
-        this.markerPositions.push(myLatlng)
-    }
-
-    openInfoWindow(marker: MapMarker) {
-        if (this.infoWindow != undefined){
-            this.infoWindow.open(marker)
-            console.log(marker);
-        };
+        this.markerPositions.push(myLatlng);
     }
     
-    fetchProperties(){
-        if(AppComponent.listingsData.length > 0){
-            console.log(AppComponent.listingsData.length);
-            for (var key in AppComponent.listingsData) {
-                this.findAddress(AppComponent.listingsData[key]);
+    infoContent = '';
+    infoContentSheriffUrl = '';
+    infoContentAddress = '';
+    infoContentLat = '';
+    infoContentLng = '';
+    openInfoWindow(marker: MapMarker, postLat: number) {
+        if (this.infoWindow != undefined){
+            for (var key in AppComponent.responseCopy) {
+                if(AppComponent.responseCopy[key]['lat'] == postLat){
+                    console.log('YUP!!!!!!! , i found it. '+ postLat + ' = ' + AppComponent.responseCopy[key]['lat']);
+                    const propertyAddress = AppComponent.responseCopy[key]['propertyAddress'];
+                    const propertyId = AppComponent.responseCopy[key]['propertyId']
+                    this.infoContentSheriffUrl = "https://sheriffsaleviewer.polkcountyiowa.gov/Home/Detail/"+propertyId;
+                    this.infoContentLat = AppComponent.responseCopy[key]['lat'];
+                    this.infoContentLng = AppComponent.responseCopy[key]['lng'];
+                    this.infoContentAddress =  propertyAddress;
+
+                }
             }
-            this.loaded = 10;
-        }
+            
+            
+            this.infoWindow.open(marker)
+            
+            console.log('here:'+postLat);
+        };
     }
 
-    findAddress(address: string) {
-        console.log(address);
-        if(!address || address.length === 0) {
-            console.log('Address was not passed');
+    
+    fetchProperties(){
+        if(Object.keys(AppComponent.responseCopy).length > 0){
+            for (var key in AppComponent.responseCopy) {
+                this.findAddress(key);
+            }
+        }
+        this.loaded = 10;
+    }
+
+    findAddress(key:string) {
+        const propertyKey = AppComponent.responseCopy[key];
+        if(!propertyKey['propertyAddress'] || propertyKey['propertyAddress'].length === 0) {
+            console.log('No Address found based on passed key');
             return;
         }
         this.geocoderWorking = true;
-        this.geocodingService.getLocation(address).subscribe( (response: GeocoderResponse) => {
+        this.geocodingService.getLocation(propertyKey['propertyAddress']).subscribe( (response: GeocoderResponse) => {
             if(response.status === 'OK' && response.results?.length) {
                 const location = response.results[0];
                 const loc: any = location.geometry.location;
                 this.locationCoords = new google.maps.LatLng(loc.lat, loc.lng);
+                propertyKey['lng'] = loc.lng; // Now we have the lon and lat, add it to the 
+                propertyKey['lat'] = loc.lat;
                 this.addMarker(loc.lat, loc.lng);
+
+                var myLatlng = new google.maps.LatLng(loc.lat,loc.lon).toJSON();
+                this.markerPositions.push(myLatlng);
+
+
                 this.address = location.formatted_address;
                 this.formattedAddress = location.formatted_address;
             }else{
