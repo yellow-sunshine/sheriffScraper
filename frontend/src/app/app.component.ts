@@ -48,7 +48,6 @@ export class AppComponent implements OnInit, AfterViewInit{
     }
 
     ngOnInit(): void{
-
     }
 
     ngAfterViewChecked(): void{
@@ -144,35 +143,32 @@ export class AppComponent implements OnInit, AfterViewInit{
     }
 
 
-    addMarker(lat:number, lon:number) {
-        var myLatlng = new google.maps.LatLng(lat,lon).toJSON();
-        this.markerPositions.push(myLatlng);
-    }
     
     infoContent = '';
     infoContentSheriffUrl = '';
     infoContentAddress = '';
     infoContentLat = '';
     infoContentLng = '';
+    infoApproxJudgment = '';
     openInfoWindow(marker: MapMarker, postLat: number) {
         if (this.infoWindow != undefined){
             for (var key in AppComponent.responseCopy) {
                 if(AppComponent.responseCopy[key]['lat'] == postLat){
-                    console.log('YUP!!!!!!! , i found it. '+ postLat + ' = ' + AppComponent.responseCopy[key]['lat']);
                     const propertyAddress = AppComponent.responseCopy[key]['propertyAddress'];
                     const propertyId = AppComponent.responseCopy[key]['propertyId']
                     this.infoContentSheriffUrl = "https://sheriffsaleviewer.polkcountyiowa.gov/Home/Detail/"+propertyId;
                     this.infoContentLat = AppComponent.responseCopy[key]['lat'];
                     this.infoContentLng = AppComponent.responseCopy[key]['lng'];
                     this.infoContentAddress =  propertyAddress;
-
+                    if(!AppComponent.responseCopy[key]['approxJudgment'] || AppComponent.responseCopy[key]['approxJudgment'] == ''){
+                        this.http.get<any>(`http://localhost:3000/sheriff-details/`+AppComponent.responseCopy[key]['propertyId']).subscribe(async (ans) => {
+                            AppComponent.responseCopy[key]['approxJudgment'] = ans;
+                            this.infoApproxJudgment = AppComponent.responseCopy[key]['approxJudgment'];
+                        });
+                    }
                 }
             }
-            
-            
             this.infoWindow.open(marker)
-            
-            console.log('here:'+postLat);
         };
     }
 
@@ -193,28 +189,22 @@ export class AppComponent implements OnInit, AfterViewInit{
             return;
         }
         this.geocoderWorking = true;
-        this.geocodingService.getLocation(propertyKey['propertyAddress']).subscribe( (response: GeocoderResponse) => {
+        this.geocodingService.getLocation(propertyKey['propertyAddress']).subscribe( async (response: GeocoderResponse) => {
             if(response.status === 'OK' && response.results?.length) {
                 const location = response.results[0];
                 const loc: any = location.geometry.location;
                 this.locationCoords = new google.maps.LatLng(loc.lat, loc.lng);
-                propertyKey['lng'] = loc.lng; // Now we have the lon and lat, add it to the 
+                propertyKey['lng'] = loc.lng; // Now we have the lon and lat, add it to the responseCopy
                 propertyKey['lat'] = loc.lat;
-                this.addMarker(loc.lat, loc.lng);
-
-                var myLatlng = new google.maps.LatLng(loc.lat,loc.lon).toJSON();
-                this.markerPositions.push(myLatlng);
-
-
-                this.address = location.formatted_address;
-                this.formattedAddress = location.formatted_address;
+                this.markerPositions.push(this.locationCoords.toJSON()); // Add the marker
             }else{
                 console.log(response.error_message, response.status);
-                console.log('im inside else and response is:' + response.status);
             }
         }).add(() => {
             this.geocoderWorking = false;
         });
     }
+
+
 
 }
